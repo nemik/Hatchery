@@ -1,0 +1,38 @@
+# this will group all the hits by hour of the day and say how many were in each hour
+# select count(*), strftime('%H',timestamp,'localtime') as hour from access_log group by hour;
+# 
+# this one same thing ony day of the week
+# select count(*), strftime('%w',timestamp,'localtime') as weekday from access_log group by weekday;
+#  
+# same except it's for each day, 1 to 366
+# select count(*), strftime('%j',timestamp,'localtime') as day from access_log group by day order by day;
+
+mkdir out
+
+sqlite3 log.db "select strftime('%s',timestamp)*1000 from access_log order by timestamp;" > m
+sed 's/^/[/' m > mm
+sed 's/$/\,\"1\"],/' mm > mmm
+sed '$s/,$//' mmm > out/out
+
+sqlite3 log.db "select strftime('%H',timestamp,'localtime') as hour, count(*) from access_log group by hour order by hour;" > m
+sed 's/^/["/' m > mm
+sed 's/\|/\",/' mm > mmm
+sed 's/$/],/' mmm > mmmm
+sed '$s/,$//' mmmm > out/hour
+
+#sqlite3 log.db "select strftime('%Y-%m-%d',timestamp,'localtime') as day, count(*) from access_log group by day order by day;" > m
+#fuck you and your 0-indexed months, javascript
+sqlite3 log.db "select strftime('Date.UTC(%Y,%m-1,%d)',timestamp) as day, count(*) from access_log group by day order by day;" > m
+sed 's/^/[/' m > mm
+sed 's/\|/,/' mm > mmm
+sed 's/$/],/' mmm > mmmm
+sed '$s/,$//' mmmm > out/days
+
+
+sqlite3 log.db "select strftime('%w',timestamp,'localtime') as day, count(*) from access_log group by day order by day;" > m
+sed 's/^/["/;s/\|/\",/;s/$/],/;$s/,$//' m > mm
+sed 's/"0"/"Sunday"/;s/"1"/"Monday"/;s/"2"/"Tuesday"/;s/"3"/"Wednesday"/;s/"4"/"Thurday"/;s/"5"/"Friday"/;s/"6"/"Saturday"/' mm > out/day
+
+rm m*
+
+scp out/* nemik@nemik.net:nemik.net/hatchery/
