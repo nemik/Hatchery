@@ -1,0 +1,6 @@
+The Hatchery is an interactive art installation at 210 N. Wells Chicago, IL. 
+
+It is powered by an Arduino monitoring two photoresistors though its ADC ports. One photoresistor is to measure ambient light and the other to measure when a hand is placed over it; when they differ beyond a threshold, it counts as a 'touch' and an LED light sequence is initiated. Also, every time someone interacts with the scultpure, the date and time of the interaction is logged and later displayed at http://nemik.net/hatchery
+
+The logging happens because the Arduino sends a 9600 baud serial message to a small Linux router (TP-Link WR703n) running OpenWRT linux with a USB flash drive and SQLite3 database. Each timestamp for a touch is added to a table in the SQLite DB.
+The router broadcasts a publically available wi-fi access point and uses uhttpd to serve up a default page and also the SQLite DB when asked. Because the installation space does not have internet access, I walk by the space from time to time to download the new data.
